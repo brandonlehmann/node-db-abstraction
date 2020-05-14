@@ -3,7 +3,7 @@
 // Please see the included LICENSE file for more information.
 
 import {EventEmitter} from 'events';
-import {Interfaces, IDatabase} from "./Types";
+import {IDatabase, Interfaces, prepareCreateTable} from "./Types";
 import {createPool, escape, Pool, PoolConnection} from 'mysql';
 
 /**
@@ -46,7 +46,7 @@ export class MySQL extends EventEmitter implements IDatabase {
     }
 
     public get blobType(): string {
-        return 'text';
+        return 'longtext';
     }
 
     public get uint32Type(): string {
@@ -65,6 +65,10 @@ export class MySQL extends EventEmitter implements IDatabase {
         this.m_tableOptions = value;
     }
 
+    public get type(): Interfaces.DBType {
+        return Interfaces.DBType.MYSQL;
+    }
+
     public on(event: 'error', listener: (error: Error) => void): this;
 
     public on(event: 'acquire', listener: (connection: PoolConnection) => void): this;
@@ -79,6 +83,39 @@ export class MySQL extends EventEmitter implements IDatabase {
 
     public on(event: any, listener: (...args: any[]) => void): this {
         return super.on(event, listener);
+    }
+
+    public async createTable(
+        name: string,
+        fields: Interfaces.ITableColumn[],
+        primaryKey: string[],
+        tableOptions?: string
+    ): Promise<void> {
+        const preparedTable = this.prepareCreateTable(name, fields, primaryKey, tableOptions);
+
+        await this.transaction([
+            {query: preparedTable.table}
+        ])
+
+        if (preparedTable.indexes.length !== 0)
+            try {
+                const stmts: Interfaces.IBulkQuery[] = preparedTable.indexes.map(idx => {
+                    return {query: idx}
+                })
+
+                await this.transaction(stmts);
+            } catch (error) {
+                this.emit('error', error);
+            }
+    }
+
+    public prepareCreateTable(
+        name: string,
+        fields: Interfaces.ITableColumn[],
+        primaryKey: string[],
+        tableOptions?: string
+    ): { table: string; indexes: string[] } {
+        return prepareCreateTable(this.type, name, fields, primaryKey, tableOptions);
     }
 
     public async close(): Promise<void> {

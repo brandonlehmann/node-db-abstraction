@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Interfaces | db-abstraction</title>
+	<title>DBType | db-abstraction</title>
 	<meta name="description" content="Documentation for db-abstraction">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -52,77 +52,72 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="interfaces.html">Interfaces</a>
+					<a href="../modules/interfaces.html">Interfaces</a>
+				</li>
+				<li>
+					<a href="interfaces.dbtype.html">DBType</a>
 				</li>
 			</ul>
-			<h1>Namespace Interfaces</h1>
+			<h1>Enumeration DBType</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>The database type</p>
+					</div>
+				</div>
+			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Enumerations</h3>
+							<h3>Enumeration members</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-enum tsd-parent-kind-namespace"><a href="../enums/interfaces.dbtype.html" class="tsd-kind-icon">DBType</a></li>
-								<li class="tsd-kind-enum tsd-parent-kind-namespace"><a href="../enums/interfaces.fkaction.html" class="tsd-kind-icon">FKAction</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
-							<h3>Interfaces</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-interface tsd-parent-kind-namespace"><a href="../interfaces/interfaces.ibulkquery.html" class="tsd-kind-icon">IBulk<wbr>Query</a></li>
-								<li class="tsd-kind-interface tsd-parent-kind-namespace"><a href="../interfaces/interfaces.iforeignkey.html" class="tsd-kind-icon">IForeign<wbr>Key</a></li>
-								<li class="tsd-kind-interface tsd-parent-kind-namespace"><a href="../interfaces/interfaces.itablecolumn.html" class="tsd-kind-icon">ITable<wbr>Column</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section ">
-							<h3>Type aliases</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-type-alias tsd-parent-kind-namespace"><a href="interfaces.html#iqueryresult" class="tsd-kind-icon">IQuery<wbr>Result</a></li>
-								<li class="tsd-kind-type-alias tsd-parent-kind-namespace"><a href="interfaces.html#ivaluearray" class="tsd-kind-icon">IValue<wbr>Array</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="interfaces.dbtype.html#mysql" class="tsd-kind-icon">MYSQL</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="interfaces.dbtype.html#postgres" class="tsd-kind-icon">POSTGRES</a></li>
+								<li class="tsd-kind-enum-member tsd-parent-kind-enum"><a href="interfaces.dbtype.html#sqlite" class="tsd-kind-icon">SQLITE</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Type aliases</h2>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-namespace">
-					<a name="iqueryresult" class="tsd-anchor"></a>
-					<h3>IQuery<wbr>Result</h3>
-					<div class="tsd-signature tsd-kind-icon">IQuery<wbr>Result<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">[</span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">]</span></div>
+				<h2>Enumeration members</h2>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="mysql" class="tsd-anchor"></a>
+					<h3>MYSQL</h3>
+					<div class="tsd-signature tsd-kind-icon">MYSQL<span class="tsd-signature-symbol">:</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/brandonlehmann/node-db-abstraction/blob/85f8e1d/src/Types.ts#L64">src/Types.ts:64</a></li>
+							<li>Defined in <a href="https://github.com/brandonlehmann/node-db-abstraction/blob/85f8e1d/src/Types.ts#L12">src/Types.ts:12</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>Represents a query result such that [0] is the number of rows returned,
-							affected, or changed, depending on the query verb</p>
-						</div>
-					</div>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-namespace">
-					<a name="ivaluearray" class="tsd-anchor"></a>
-					<h3>IValue<wbr>Array</h3>
-					<div class="tsd-signature tsd-kind-icon">IValue<wbr>Array<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">[]</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="postgres" class="tsd-anchor"></a>
+					<h3>POSTGRES</h3>
+					<div class="tsd-signature tsd-kind-icon">POSTGRES<span class="tsd-signature-symbol">:</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/brandonlehmann/node-db-abstraction/blob/85f8e1d/src/Types.ts#L69">src/Types.ts:69</a></li>
+							<li>Defined in <a href="https://github.com/brandonlehmann/node-db-abstraction/blob/85f8e1d/src/Types.ts#L13">src/Types.ts:13</a></li>
 						</ul>
 					</aside>
-					<div class="tsd-comment tsd-typography">
-						<div class="lead">
-							<p>A nested array of values</p>
-						</div>
-					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-enum-member tsd-parent-kind-enum">
+					<a name="sqlite" class="tsd-anchor"></a>
+					<h3>SQLITE</h3>
+					<div class="tsd-signature tsd-kind-icon">SQLITE<span class="tsd-signature-symbol">:</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/brandonlehmann/node-db-abstraction/blob/85f8e1d/src/Types.ts#L14">src/Types.ts:14</a></li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 		</div>
@@ -133,17 +128,32 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class="current tsd-kind-namespace">
-						<a href="interfaces.html">Interfaces</a>
+						<a href="../modules/interfaces.html">Interfaces</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-enum tsd-parent-kind-namespace">
-						<a href="../enums/interfaces.dbtype.html" class="tsd-kind-icon">DBType</a>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-enum tsd-parent-kind-namespace">
+						<a href="interfaces.dbtype.html" class="tsd-kind-icon">DBType</a>
+						<ul>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="interfaces.dbtype.html#mysql" class="tsd-kind-icon">MYSQL</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="interfaces.dbtype.html#postgres" class="tsd-kind-icon">POSTGRES</a>
+							</li>
+							<li class=" tsd-kind-enum-member tsd-parent-kind-enum">
+								<a href="interfaces.dbtype.html#sqlite" class="tsd-kind-icon">SQLITE</a>
+							</li>
+						</ul>
 					</li>
+				</ul>
+				<ul class="after-current">
 					<li class=" tsd-kind-enum tsd-parent-kind-namespace">
-						<a href="../enums/interfaces.fkaction.html" class="tsd-kind-icon">FKAction</a>
+						<a href="interfaces.fkaction.html" class="tsd-kind-icon">FKAction</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-namespace">
 						<a href="../interfaces/interfaces.ibulkquery.html" class="tsd-kind-icon">IBulk<wbr>Query</a>
@@ -155,10 +165,10 @@
 						<a href="../interfaces/interfaces.itablecolumn.html" class="tsd-kind-icon">ITable<wbr>Column</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-namespace">
-						<a href="interfaces.html#iqueryresult" class="tsd-kind-icon">IQuery<wbr>Result</a>
+						<a href="../modules/interfaces.html#iqueryresult" class="tsd-kind-icon">IQuery<wbr>Result</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-namespace">
-						<a href="interfaces.html#ivaluearray" class="tsd-kind-icon">IValue<wbr>Array</a>
+						<a href="../modules/interfaces.html#ivaluearray" class="tsd-kind-icon">IValue<wbr>Array</a>
 					</li>
 				</ul>
 			</nav>

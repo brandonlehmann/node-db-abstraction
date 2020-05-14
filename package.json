@@ -1,16 +1,21 @@
 {
   "name": "db-abstraction",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "description": "A simple database abstraction layer for multiple underlying database systems",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "install": "./node_modules/.bin/tsc",
+    "build": "./node_modules/.bin/tsc",
+    "test": "npm run style",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run docs",
     "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll",
-    "style": "./node_modules/.bin/eslint -c .eslintrc.js src",
-    "fix-style": "./node_modules/.bin/eslint -c .eslintrc.js --fix src"
+    "style": "./node_modules/.bin/eslint -c .eslintrc.js src/*.ts",
+    "fix-style": "./node_modules/.bin/eslint -c .eslintrc.js --fix src/*.ts"
   },
+  "files": [
+    "dist/*"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/brandonlehmann/node-db-abstraction.git"
@@ -23,20 +28,21 @@
   "homepage": "https://github.com/brandonlehmann/node-db-abstraction#readme",
   "dependencies": {
     "mysql": "^2.18.1",
+    "node-metronome": "0.0.10",
     "pg": "8.1.0",
     "pg-format": "^1.0.4",
-    "sqlite3": "^4.2.0",
-    "typescript": "^3.9.2"
+    "sqlite3": "^4.2.0"
   },
   "devDependencies": {
-    "@types/mysql": "^2.15.10",
-    "@types/node": "^14.0.1",
-    "@types/pg": "^7.14.3",
+    "@types/mysql": "^2.15.14",
+    "@types/node": "^14.0.22",
+    "@types/pg": "^7.14.4",
     "@types/pg-format": "^1.0.0",
     "@types/sqlite3": "^3.1.6",
-    "@typescript-eslint/eslint-plugin": "^2.33.0",
-    "@typescript-eslint/parser": "^2.33.0",
-    "eslint": "^7.0.0",
-    "typedoc": "^0.17.6"
+    "@typescript-eslint/eslint-plugin": "^2.34.0",
+    "@typescript-eslint/parser": "^2.34.0",
+    "eslint": "^5.16.0",
+    "typedoc": "^0.17.8",
+    "typescript": "^3.9.6"
   }
 }

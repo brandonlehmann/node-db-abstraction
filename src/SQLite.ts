@@ -3,10 +3,11 @@
 // Please see the included LICENSE file for more information.
 
 import {EventEmitter} from 'events';
-import {Interfaces, IDatabase} from "./Types";
+import {IDatabase, Interfaces, prepareCreateTable} from "./Types";
 import {resolve} from 'path';
 import {Database, OPEN_CREATE, OPEN_READWRITE} from 'sqlite3';
 import {escape} from 'mysql';
+import {Metronome} from "node-metronome";
 
 /** @ignore */
 const pragmaFunctionCalls = [
@@ -23,9 +24,28 @@ const pragmaFunctionCalls = [
     'optimize'
 ]
 
+/** @ignore */
+interface ICallback {
+    callback: (error: Error | undefined, result: Interfaces.IQueryResult | undefined) => void;
+}
+
+/** @ignore */
+interface ITransactionQueueEntry extends ICallback {
+    queries: Interfaces.IBulkQuery[];
+}
+
+interface IQueryQueueEntry extends ICallback {
+    query: string;
+    values?: any[];
+}
+
 export class SQLite extends EventEmitter implements IDatabase {
     private readonly m_db: Database;
     private m_tableOptions: string | undefined = undefined;
+    private m_timer: Metronome;
+    private m_transactionQueue: ITransactionQueueEntry[] = [];
+    private m_runQueue: IQueryQueueEntry[] = [];
+    private m_allQueue: IQueryQueueEntry[] = [];
 
     /**
      * Creates a new instance of the class
@@ -53,6 +73,72 @@ export class SQLite extends EventEmitter implements IDatabase {
                 this.emit('error', e);
             }
         })
+
+        this.m_timer = new Metronome(250, true);
+
+        this.m_timer.on('tick', async () => {
+            this.m_timer.paused = true;
+
+            while (this.m_transactionQueue.length > 0) {
+                const queuedTransaction = this.m_transactionQueue.shift();
+
+                if (!queuedTransaction) {
+                    break;
+                }
+
+                const connection = await this.connection();
+
+                try {
+                    await beginTransaction(connection);
+
+                    for (const q of queuedTransaction.queries) {
+                        await query(connection, q.query, q.values);
+                    }
+
+                    await commit(connection);
+
+                    queuedTransaction.callback(undefined, undefined);
+                } catch (e) {
+                    await rollback(connection);
+
+                    queuedTransaction.callback(e, undefined);
+                }
+            }
+
+            while (this.m_allQueue.length > 0) {
+                const queue = this.m_allQueue.shift();
+
+                if (!queue) {
+                    break;
+                }
+
+                try {
+                    const result = await this.all(queue.query, queue.values);
+
+                    queue.callback(undefined, result);
+                } catch (e) {
+                    queue.callback(e, undefined);
+                }
+            }
+
+            while (this.m_runQueue.length > 0) {
+                const queue = this.m_runQueue.shift();
+
+                if (!queue) {
+                    break;
+                }
+
+                try {
+                    const result = await this.run(queue.query, queue.values);
+
+                    queue.callback(undefined, result);
+                } catch (e) {
+                    queue.callback(e, undefined);
+                }
+            }
+
+            this.m_timer.paused = false;
+        })
     }
 
     public get hashType(): string {
@@ -79,6 +165,10 @@ export class SQLite extends EventEmitter implements IDatabase {
         this.m_tableOptions = value;
     }
 
+    public get type(): Interfaces.DBType {
+        return Interfaces.DBType.SQLITE;
+    }
+
     public on(event: 'error', listener: (error: Error) => void): this;
 
     public on(event: 'ready', listener: (filepath: string, mode: number) => void): this;
@@ -87,53 +177,89 @@ export class SQLite extends EventEmitter implements IDatabase {
         return super.on(event, listener);
     }
 
+    public async createTable(
+        name: string,
+        fields: Interfaces.ITableColumn[],
+        primaryKey: string[],
+        tableOptions?: string
+    ): Promise<void> {
+        const preparedTable = this.prepareCreateTable(name, fields, primaryKey, tableOptions);
+
+        await this.transaction([
+            {query: preparedTable.table}
+        ])
+
+        if (preparedTable.indexes.length !== 0)
+            try {
+                const stmts: Interfaces.IBulkQuery[] = preparedTable.indexes.map(idx => {
+                    return {query: idx}
+                })
+
+                await this.transaction(stmts);
+            } catch (error) {
+                this.emit('error', error);
+            }
+    }
+
+    public prepareCreateTable(
+        name: string,
+        fields: Interfaces.ITableColumn[],
+        primaryKey: string[],
+        tableOptions?: string
+    ): { table: string; indexes: string[] } {
+        return prepareCreateTable(this.type, name, fields, primaryKey, tableOptions);
+    }
+
     public async getPragma(option: string): Promise<any> {
-        return new Promise((resolve, reject) => {
-            option = option.toLowerCase();
+        option = option.toLowerCase();
 
-            let query = 'PRAGMA ' + option;
+        let query = 'PRAGMA ' + option;
 
-            this.m_db.all(query, (error, rows) => {
-                if (error) return reject(error);
+        const [count, rows] = await this.query(query);
 
-                if (rows.length === 1) {
-                    return resolve(rows[0][option]);
-                } else {
-                    if (rows[0][option]) {
-                        return resolve(rows.map(elem => elem[option]));
-                    }
-                }
+        if (count === 1) {
+            return rows[0][option];
+        } else {
+            if (rows[0][option]) {
+                return rows.map(elem => elem[option]);
+            }
+        }
 
-                return resolve(rows);
-            })
-        })
+        return rows;
     }
 
     public async setPragma(
         option: string,
         value: boolean | number | string
     ): Promise<void> {
-        return new Promise((resolve, reject) => {
-            option = option.toLowerCase();
+        option = option.toLowerCase();
 
-            let query = 'PRAGMA ';
+        let query = 'PRAGMA ';
 
-            if (pragmaFunctionCalls.indexOf(option) !== -1) {
-                query += option + '(' + value + ')';
-            } else {
-                query += option + ' = ' + value;
-            }
+        if (pragmaFunctionCalls.indexOf(option) !== -1) {
+            query += option + '(' + value + ')';
+        } else {
+            query += option + ' = ' + value;
+        }
 
-            this.m_db.run(query, error => {
-                if (error) return reject(error);
-
-                return resolve();
-            })
-        })
+        await this.query(query);
     }
 
     public async close(): Promise<void> {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            const sleep = async (timeout: number = 100) =>
+                new Promise(resolve => setTimeout(resolve, timeout));
+
+            /**
+             * Let's not close the database connection while we still have stuff
+             * waiting to get done
+             */
+            while (this.m_transactionQueue.length !== 0
+            || this.m_runQueue.length !== 0
+            || this.m_allQueue.length !== 0) {
+                await sleep();
+            }
+
             this.m_db.close(error => {
                 if (error) return reject(error);
 
@@ -148,20 +274,26 @@ export class SQLite extends EventEmitter implements IDatabase {
     ): Promise<Interfaces.IQueryResult> {
         return new Promise((resolve, reject) => {
             if (query.toLowerCase().startsWith('select')) {
-                this.m_db.all(query, values, (err, rows) => {
-                    if (err) return reject(err);
+                this.m_allQueue.push({
+                    query, values, callback:
+                        (error, result) => {
+                            if (error) {
+                                return reject(error);
+                            }
 
-                    return resolve([rows.length, rows]);
+                            return resolve(result);
+                        }
                 })
             } else {
-                this.m_db.run(query, values, function (err) {
-                    if (err) return reject(err);
+                this.m_runQueue.push({
+                    query, values, callback:
+                        (error, result) => {
+                            if (error) {
+                                return reject(error);
+                            }
 
-                    const count = (query.toLowerCase().startsWith('insert')) ? this.lastID :
-                        (query.toLowerCase().startsWith('update')
-                            || query.toLowerCase().startsWith('delete')) ? this.changes : 0;
-
-                    return resolve([count, []]);
+                            return resolve(result);
+                        }
                 })
             }
         })
@@ -172,20 +304,18 @@ export class SQLite extends EventEmitter implements IDatabase {
     }
 
     public async transaction(queries: Interfaces.IBulkQuery[]): Promise<void> {
-        const connection = await this.connection();
+        return new Promise((resolve, reject) => {
+            this.m_transactionQueue.push({
+                queries: queries,
+                callback: (error) => {
+                    if (error) {
+                        return reject(error);
+                    }
 
-        try {
-            await beginTransaction(connection);
-
-            for (const q of queries) {
-                await query(connection, q.query, q.values);
-            }
-
-            await commit(connection);
-        } catch (e) {
-            await rollback(connection);
-            throw e;
-        }
+                    return resolve();
+                }
+            })
+        })
     }
 
     public prepareMultiInsert(query: string, values?: Interfaces.IValueArray): string {
@@ -196,6 +326,34 @@ export class SQLite extends EventEmitter implements IDatabase {
         }
 
         return query;
+    }
+
+    private async all(query: string, values?: any[]): Promise<Interfaces.IQueryResult> {
+        return new Promise((resolve, reject) => {
+            this.m_db.all(query, values, (error, rows) => {
+                if (error) {
+                    return reject(error);
+                }
+
+                return resolve([rows.length, rows]);
+            })
+        })
+    }
+
+    private async run(query: string, values?: any[]): Promise<Interfaces.IQueryResult> {
+        return new Promise((resolve, reject) => {
+            this.m_db.run(query, values, function (error) {
+                if (error) {
+                    return reject(error);
+                }
+
+                const count = (query.toLowerCase().startsWith('insert')) ? this.lastID :
+                    (query.toLowerCase().startsWith('update')
+                        || query.toLowerCase().startsWith('delete')) ? this.changes : 0;
+
+                return resolve([count, []]);
+            })
+        })
     }
 }
 

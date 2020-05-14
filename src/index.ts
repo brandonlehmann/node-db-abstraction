@@ -5,4 +5,4 @@
 export {MySQL} from './MySQL';
 export {Postgres} from './Postgres';
 export {SQLite} from './SQLite';
-export {Interfaces, IDatabase} from './Types';
+export {Interfaces, IDatabase, prepareCreateTable} from './Types';

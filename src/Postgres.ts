@@ -5,7 +5,7 @@
 import {EventEmitter} from 'events';
 import {Pool, PoolClient} from 'pg';
 import * as pgformat from 'pg-format';
-import {Interfaces, IDatabase} from "./Types";
+import {IDatabase, Interfaces, prepareCreateTable} from "./Types";
 
 export class Postgres extends EventEmitter implements IDatabase {
     private readonly m_pool: Pool;
@@ -71,6 +71,10 @@ export class Postgres extends EventEmitter implements IDatabase {
         this.m_tableOptions = value;
     }
 
+    public get type(): Interfaces.DBType {
+        return Interfaces.DBType.POSTGRES;
+    }
+
     public on(event: 'connect', listener: (client: PoolClient) => void): this;
 
     public on(event: 'acquire', listener: (client: PoolClient) => void): this;
@@ -87,6 +91,39 @@ export class Postgres extends EventEmitter implements IDatabase {
 
     public async close(): Promise<void> {
         return this.m_pool.end();
+    }
+
+    public async createTable(
+        name: string,
+        fields: Interfaces.ITableColumn[],
+        primaryKey: string[],
+        tableOptions?: string
+    ): Promise<void> {
+        const preparedTable = this.prepareCreateTable(name, fields, primaryKey, tableOptions);
+
+        await this.transaction([
+            {query: preparedTable.table}
+        ])
+
+        if (preparedTable.indexes.length !== 0)
+            try {
+                const stmts: Interfaces.IBulkQuery[] = preparedTable.indexes.map(idx => {
+                    return {query: idx}
+                })
+
+                await this.transaction(stmts);
+            } catch (error) {
+                this.emit('error', error);
+            }
+    }
+
+    public prepareCreateTable(
+        name: string,
+        fields: Interfaces.ITableColumn[],
+        primaryKey: string[],
+        tableOptions?: string
+    ): { table: string; indexes: string[] } {
+        return prepareCreateTable(this.type, name, fields, primaryKey, tableOptions);
     }
 
     public async query(

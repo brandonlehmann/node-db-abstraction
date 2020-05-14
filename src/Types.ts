@@ -6,6 +6,15 @@ import {format} from "util";
 
 export namespace Interfaces {
     /**
+     * The database type
+     */
+    export enum DBType {
+        MYSQL,
+        POSTGRES,
+        SQLITE
+    }
+
+    /**
      * Bulk Query interface that allows us to specify a single query with
      * a multidimensional array of values
      */
@@ -22,6 +31,8 @@ export namespace Interfaces {
         type: string;
         nullable?: boolean;
         foreign?: IForeignKey;
+        unique?: boolean;
+        default?: string | number
     }
 
     /**
@@ -90,63 +101,38 @@ export abstract class IDatabase {
     public abstract get tableOptions(): string | undefined;
 
     /**
-     * Prepares a CREATE TABLE statement for mass execution
+     * Returns the database type
+     */
+    public abstract get type(): Interfaces.DBType;
+
+    /**
+     * Creates the table with the given fields and options
      * @param name
      * @param fields
      * @param primaryKey
      * @param tableOptions
      */
-    public static prepareCreateTable(
+    public abstract async createTable(
         name: string,
         fields: Interfaces.ITableColumn[],
         primaryKey: string[],
-        tableOptions: string | undefined
-    ): string {
-        const l_fields = fields.map(col =>
-            format(
-                '%s %s %s',
-                col.name,
-                col.type,
-                (!col.nullable) ? 'NOT NULL' : 'NULL'
-            ));
+        tableOptions?: string
+    ): Promise<void>;
 
-        const constraint_fmt =
-            ', CONSTRAINT %s_%s_fkey FOREIGN KEY (%s) REFERENCES %s (%s)';
-
-        const l_constraints: string[] = [];
-
-        for (const field of fields) {
-            if (field.foreign) {
-                let constraint = format(
-                    constraint_fmt,
-                    name,
-                    field.name,
-                    field.name,
-                    field.foreign.table,
-                    field.foreign.column
-                );
-
-                if (field.foreign.delete) {
-                    constraint += format(' ON DELETE %s', field.foreign.delete.toUpperCase());
-                }
-
-                if (field.foreign.update) {
-                    constraint += format(' ON UPDATE %s', field.foreign.update.toUpperCase());
-                }
-
-                l_constraints.push(constraint)
-            }
-        }
-
-        return format(
-            'CREATE TABLE IF NOT EXISTS %s (%s, PRIMARY KEY (%s)%s) %s',
-            name,
-            l_fields.join(', '),
-            primaryKey.join(','),
-            l_constraints.join(','),
-            tableOptions || ''
-        ).trim();
-    }
+    /**
+     * Creates the SQL statements necessary to create a table with the given
+     * fields and options
+     * @param name
+     * @param fields
+     * @param primaryKey
+     * @param tableOptions
+     */
+    public abstract prepareCreateTable(
+        name: string,
+        fields: Interfaces.ITableColumn[],
+        primaryKey: string[],
+        tableOptions?: string
+    ): { table: string, indexes: string[] };
 
     /**
      * Closes the database connection(s)
@@ -173,4 +159,72 @@ export abstract class IDatabase {
      * @param values
      */
     public abstract prepareMultiInsert(query: string, values?: Interfaces.IValueArray): string;
+}
+
+export function prepareCreateTable(
+    dbType: Interfaces.DBType,
+    name: string,
+    fields: Interfaces.ITableColumn[],
+    primaryKey: string[],
+    tableOptions: string | undefined
+): { table: string, indexes: string[] } {
+    const l_fields = fields.map(col =>
+        format(
+            '%s %s %s %s',
+            col.name,
+            col.type,
+            (!col.nullable) ? 'NOT NULL' : 'NULL',
+            (typeof col.default !== 'undefined') ? 'DEFAULT ' + col.default : ''
+        ));
+
+    const l_unique = fields.filter(elem => elem.unique === true)
+        .map(col => format(
+                'CREATE UNIQUE INDEX IF NOT EXISTS %s_unique_%s ON %s (%s);',
+                name,
+                col.name,
+                name,
+                col.name
+            ));
+
+    const constraint_fmt =
+        ', CONSTRAINT %s_%s_fkey FOREIGN KEY (%s) REFERENCES %s (%s)';
+
+    const l_constraints: string[] = [];
+
+    for (const field of fields) {
+        if (field.foreign) {
+            let constraint = format(
+                constraint_fmt,
+                name,
+                field.name,
+                field.name,
+                field.foreign.table,
+                field.foreign.column
+            );
+
+            if (field.foreign.delete) {
+                constraint += format(' ON DELETE %s', field.foreign.delete.toUpperCase());
+            }
+
+            if (field.foreign.update) {
+                constraint += format(' ON UPDATE %s', field.foreign.update.toUpperCase());
+            }
+
+            l_constraints.push(constraint)
+        }
+    }
+
+    let sql = format(
+        'CREATE TABLE IF NOT EXISTS %s (%s, PRIMARY KEY (%s)%s) %s;',
+        name,
+        l_fields.join(', '),
+        primaryKey.join(','),
+        l_constraints.join(','),
+        tableOptions || ''
+    ).trim();
+
+    return {
+        table: sql,
+        indexes: l_unique
+    }
 }
