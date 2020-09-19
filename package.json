@@ -1,6 +1,6 @@
 {
   "name": "db-abstraction",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "description": "A simple database abstraction layer for multiple underlying database systems",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -27,22 +27,22 @@
   },
   "homepage": "https://github.com/brandonlehmann/node-db-abstraction#readme",
   "dependencies": {
+    "@types/mysql": "^2.15.15",
+    "@types/pg": "^7.14.5",
+    "@types/pg-format": "^1.0.1",
+    "@types/sqlite3": "^3.1.6",
     "mysql": "^2.18.1",
-    "node-metronome": "0.0.10",
-    "pg": "8.1.0",
+    "node-metronome": "0.0.12",
+    "pg": "^8.3.3",
     "pg-format": "^1.0.4",
     "sqlite3": "^4.2.0"
   },
   "devDependencies": {
-    "@types/mysql": "^2.15.14",
-    "@types/node": "^14.0.22",
-    "@types/pg": "^7.14.4",
-    "@types/pg-format": "^1.0.0",
-    "@types/sqlite3": "^3.1.6",
+    "@types/node": "^14.11.1",
     "@typescript-eslint/eslint-plugin": "^2.34.0",
     "@typescript-eslint/parser": "^2.34.0",
     "eslint": "^5.16.0",
     "typedoc": "^0.17.8",
-    "typescript": "^3.9.6"
+    "typescript": "^3.9.7"
   }
 }
