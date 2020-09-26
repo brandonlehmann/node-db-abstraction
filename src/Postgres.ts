@@ -5,7 +5,7 @@
 import {EventEmitter} from 'events';
 import {Pool, PoolClient} from 'pg';
 import * as pgformat from 'pg-format';
-import {IDatabase, Interfaces, prepareCreateTable} from "./Types";
+import {createTable, IDatabase, Interfaces, prepareCreateTable} from "./Types";
 
 export class Postgres extends EventEmitter implements IDatabase {
     private readonly m_pool: Pool;
@@ -99,22 +99,11 @@ export class Postgres extends EventEmitter implements IDatabase {
         primaryKey: string[],
         tableOptions?: string
     ): Promise<void> {
-        const preparedTable = this.prepareCreateTable(name, fields, primaryKey, tableOptions);
-
-        await this.transaction([
-            {query: preparedTable.table}
-        ])
-
-        if (preparedTable.indexes.length !== 0)
-            try {
-                const stmts: Interfaces.IBulkQuery[] = preparedTable.indexes.map(idx => {
-                    return {query: idx}
-                })
-
-                await this.transaction(stmts);
-            } catch (error) {
-                this.emit('error', error);
-            }
+        try {
+            await createTable(this, this.type, name, fields, primaryKey, tableOptions);
+        } catch (error) {
+            this.emit('error', error);
+        }
     }
 
     public prepareCreateTable(

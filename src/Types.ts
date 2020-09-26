@@ -159,8 +159,27 @@ export abstract class IDatabase {
      * @param values
      */
     public abstract prepareMultiInsert(query: string, values?: Interfaces.IValueArray): string;
+
+    /**
+     * Prepares a query to perform a multi-update statement via UPSERT
+     * style statements which is far faster than a whole bunch of
+     * individual update statements in most of the DBMS platforms
+     * @param query
+     * @param values
+     */
+    // public abstract prepareMultiUpdate(query: string, values?: Interfaces.IValueArray): string;
 }
 
+/**
+ * Prepares a CREATE TABLE statement for the underlying database
+ * type and builds the primary keys and fields based on the supplied
+ * values
+ * @param dbType
+ * @param name
+ * @param fields
+ * @param primaryKey
+ * @param tableOptions
+ */
 export function prepareCreateTable(
     dbType: Interfaces.DBType,
     name: string,
@@ -214,7 +233,7 @@ export function prepareCreateTable(
         }
     }
 
-    let sql = format(
+    const sql = format(
         'CREATE TABLE IF NOT EXISTS %s (%s, PRIMARY KEY (%s)%s) %s;',
         name,
         l_fields.join(', '),
@@ -226,5 +245,35 @@ export function prepareCreateTable(
     return {
         table: sql,
         indexes: l_unique
+    }
+}
+
+/**
+ * Executes the result of the prepare create table and returns if completed
+ * @param db
+ * @param dbType
+ * @param name
+ * @param fields
+ * @param primaryKey
+ * @param tableOptions
+ */
+export async function createTable(
+    db: IDatabase,
+    dbType: Interfaces.DBType,
+    name: string,
+    fields: Interfaces.ITableColumn[],
+    primaryKey: string[],
+    tableOptions?: string
+): Promise<void> {
+    const preparedTable = prepareCreateTable(dbType, name, fields, primaryKey, tableOptions);
+
+    await db.transaction([{query: preparedTable.table}]);
+
+    if (preparedTable.indexes.length !== 0) {
+        const stmts: Interfaces.IBulkQuery[] = preparedTable.indexes.map(query => {
+            return { query };
+        });
+
+        await db.transaction(stmts);
     }
 }

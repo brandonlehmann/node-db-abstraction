@@ -3,7 +3,7 @@
 // Please see the included LICENSE file for more information.
 
 import {EventEmitter} from 'events';
-import {IDatabase, Interfaces, prepareCreateTable} from "./Types";
+import {createTable, IDatabase, Interfaces, prepareCreateTable} from "./Types";
 import {resolve} from 'path';
 import {Database, OPEN_CREATE, OPEN_READWRITE} from 'sqlite3';
 import {escape} from 'mysql';
@@ -183,22 +183,11 @@ export class SQLite extends EventEmitter implements IDatabase {
         primaryKey: string[],
         tableOptions?: string
     ): Promise<void> {
-        const preparedTable = this.prepareCreateTable(name, fields, primaryKey, tableOptions);
-
-        await this.transaction([
-            {query: preparedTable.table}
-        ])
-
-        if (preparedTable.indexes.length !== 0)
-            try {
-                const stmts: Interfaces.IBulkQuery[] = preparedTable.indexes.map(idx => {
-                    return {query: idx}
-                })
-
-                await this.transaction(stmts);
-            } catch (error) {
-                this.emit('error', error);
-            }
+        try {
+            await createTable(this, this.type, name, fields, primaryKey, tableOptions);
+        } catch (error) {
+            this.emit('error', error);
+        }
     }
 
     public prepareCreateTable(
@@ -213,7 +202,7 @@ export class SQLite extends EventEmitter implements IDatabase {
     public async getPragma(option: string): Promise<any> {
         option = option.toLowerCase();
 
-        let query = 'PRAGMA ' + option;
+        const query = 'PRAGMA ' + option;
 
         const [count, rows] = await this.query(query);
 
@@ -246,6 +235,7 @@ export class SQLite extends EventEmitter implements IDatabase {
     }
 
     public async close(): Promise<void> {
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             const sleep = async (timeout: number = 100) =>
                 new Promise(resolve => setTimeout(resolve, timeout));
