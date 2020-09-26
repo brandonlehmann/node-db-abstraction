@@ -10,8 +10,8 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run docs",
     "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll && git restore docs/CNAME",
-    "style": "./node_modules/.bin/eslint -c .eslintrc.js src/*.ts",
-    "fix-style": "./node_modules/.bin/eslint -c .eslintrc.js --fix src/*.ts"
+    "style": "./node_modules/.bin/eslint src/**/*.ts",
+    "fix-style": "./node_modules/.bin/eslint --fix src/**/*.ts"
   },
   "files": [
     "dist/*"
@@ -42,6 +42,11 @@
     "@typescript-eslint/eslint-plugin": "^4.2.0",
     "@typescript-eslint/parser": "^4.2.0",
     "eslint": "^7.9.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
     "typedoc": "^0.19.2",
     "typescript": "^4.0.3"
   }
