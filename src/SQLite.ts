@@ -325,6 +325,19 @@ export class SQLite extends EventEmitter implements IDatabase {
         return query;
     }
 
+    public prepareMultiUpdate (
+        table: string, primaryKey: string[], columns: string[], values?: Interfaces.IValueArray): string {
+        const query = this.prepareMultiInsert(table, primaryKey.concat(columns), values);
+
+        const updates: string[] = [];
+
+        for (const column of columns) {
+            updates.push(format(' %s = excluded.%s', column, column));
+        }
+
+        return format('%s ON CONFLICT (%s) DO UPDATE SET %s', query, primaryKey.join(','), updates.join(','));
+    }
+
     private async all (query: string, values?: any[]): Promise<Interfaces.IQueryResult> {
         return new Promise((resolve, reject) => {
             this.m_db.all(query, values, (error, rows) => {

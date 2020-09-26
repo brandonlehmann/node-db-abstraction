@@ -167,6 +167,19 @@ export class MySQL extends EventEmitter implements IDatabase {
         return query;
     }
 
+    public prepareMultiUpdate (
+        table: string, primaryKey: string[], columns: string[], values?: Interfaces.IValueArray): string {
+        const query = this.prepareMultiInsert(table, primaryKey.concat(columns), values);
+
+        const updates: string[] = [];
+
+        for (const column of columns) {
+            updates.push(format(' %s = VALUES(%s)', column, column));
+        }
+
+        return format('%s ON DUPLICATE KEY UPDATE %s', query, updates.join(','));
+    }
+
     private async connection (): Promise<PoolConnection> {
         return new Promise((resolve, reject) => {
             this.m_db.getConnection((error, connection) => {

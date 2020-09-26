@@ -156,6 +156,19 @@ export class Postgres extends EventEmitter implements IDatabase {
 
         return pgformat(query, values);
     }
+
+    public prepareMultiUpdate (
+        table: string, primaryKey: string[], columns: string[], values?: Interfaces.IValueArray): string {
+        const query = this.prepareMultiInsert(table, primaryKey.concat(columns), values);
+
+        const updates: string[] = [];
+
+        for (const column of columns) {
+            updates.push(format(' %s = excluded.%s', column, column));
+        }
+
+        return format('%s ON CONFLICT (%s) DO UPDATE SET %s', query, primaryKey.join(','), updates.join(','));
+    }
 }
 
 /** @ignore */
