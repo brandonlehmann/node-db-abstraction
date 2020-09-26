@@ -86,6 +86,13 @@ export class MySQL extends EventEmitter implements IDatabase {
         return super.on(event, listener);
     }
 
+    /**
+     * Creates the table with the given fields and options
+     * @param name
+     * @param fields
+     * @param primaryKey
+     * @param tableOptions
+     */
     public async createTable (
         name: string,
         fields: Interfaces.ITableColumn[],
@@ -99,6 +106,14 @@ export class MySQL extends EventEmitter implements IDatabase {
         }
     }
 
+    /**
+     * Creates the SQL statements necessary to create a table with the given
+     * fields and options
+     * @param name
+     * @param fields
+     * @param primaryKey
+     * @param tableOptions
+     */
     public prepareCreateTable (
         name: string,
         fields: Interfaces.ITableColumn[],
@@ -108,6 +123,9 @@ export class MySQL extends EventEmitter implements IDatabase {
         return prepareCreateTable(this.type, name, fields, primaryKey, tableOptions);
     }
 
+    /**
+     * Closes the database connection(s)
+     */
     public async close (): Promise<void> {
         return new Promise((resolve, reject) => {
             this.m_db.end(err => {
@@ -118,6 +136,12 @@ export class MySQL extends EventEmitter implements IDatabase {
         });
     }
 
+    /**
+     * Performs a query and returns the result
+     * @param query
+     * @param values
+     * @param openClient permit specifying the pool client to use
+     */
     public async query (
         query: string,
         values?: any[]
@@ -136,6 +160,10 @@ export class MySQL extends EventEmitter implements IDatabase {
         });
     }
 
+    /**
+     * Constructs and executes the given queries in a transaction
+     * @param queries
+     */
     public async transaction (queries: Interfaces.IBulkQuery[]): Promise<void> {
         const connection = await this.connection();
 
@@ -155,6 +183,13 @@ export class MySQL extends EventEmitter implements IDatabase {
         }
     }
 
+    /**
+     * Prepares a query to perform a multi-insert statement which is
+     * far faster than a whole bunch of individual insert statements
+     * @param table the table to perform the insert on
+     * @param columns the columns to include in the insert
+     * @param values the value of the columns
+     */
     public prepareMultiInsert (table: string, columns: string[], values?: Interfaces.IValueArray): string {
         const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
 
@@ -167,6 +202,16 @@ export class MySQL extends EventEmitter implements IDatabase {
         return query;
     }
 
+    /**
+     * Prepares a query to perform a multi-update statement which is
+     * based upon a multi-insert statement that performs an UPSERT
+     * and this is a lot faster than a whole bunch of individual
+     * update statements
+     * @param table the table to perform the insert on
+     * @param primaryKey the primary key(s) of the column for update purposes
+     * @param columns the columns to update in the table
+     * @param values the value of the columns
+     */
     public prepareMultiUpdate (
         table: string, primaryKey: string[], columns: string[], values?: Interfaces.IValueArray): string {
         const query = this.prepareMultiInsert(table, primaryKey.concat(columns), values);

@@ -8,6 +8,9 @@ import * as pgformat from 'pg-format';
 import { format } from 'util';
 import { createTable, IDatabase, Interfaces, prepareCreateTable } from './Types';
 
+/**
+ * Postgres database abstraction interface
+ */
 export class Postgres extends EventEmitter implements IDatabase {
     private readonly m_pool: Pool;
     private m_tableOptions: string | undefined = undefined;
@@ -48,22 +51,38 @@ export class Postgres extends EventEmitter implements IDatabase {
         this.emit('ready');
     }
 
+    /**
+     * Returns the column type for the DB for a hash (ie. char(64))
+     */
     public get hashType (): string {
         return 'char(64)';
     }
 
+    /**
+     * Returns the column type for the DB to store a hexadecimal blob of data
+     */
     public get blobType (): string {
         return 'text';
     }
 
+    /**
+     * Returns the column type for the DB to store a uint32_t value
+     */
     public get uint32Type (): string {
         return 'numeric(10)';
     }
 
+    /**
+     * Returns the column type for the DB to store a uint64_t value
+     */
     public get uint64Type (): string {
         return 'numeric(20)';
     }
 
+    /**
+     * Returns a string of additional options that need to be applied to tables
+     * which may include ENGINE information, compression, etc depending on the DB system
+     */
     public get tableOptions (): string | undefined {
         return this.m_tableOptions;
     }
@@ -72,6 +91,9 @@ export class Postgres extends EventEmitter implements IDatabase {
         this.m_tableOptions = value;
     }
 
+    /**
+     * Returns the database type
+     */
     public get type (): Interfaces.DBType {
         return Interfaces.DBType.POSTGRES;
     }
@@ -90,10 +112,20 @@ export class Postgres extends EventEmitter implements IDatabase {
         return super.on(event, listener);
     }
 
+    /**
+     * Closes the database connection(s)
+     */
     public async close (): Promise<void> {
         return this.m_pool.end();
     }
 
+    /**
+     * Creates the table with the given fields and options
+     * @param name
+     * @param fields
+     * @param primaryKey
+     * @param tableOptions
+     */
     public async createTable (
         name: string,
         fields: Interfaces.ITableColumn[],
@@ -107,6 +139,14 @@ export class Postgres extends EventEmitter implements IDatabase {
         }
     }
 
+    /**
+     * Creates the SQL statements necessary to create a table with the given
+     * fields and options
+     * @param name
+     * @param fields
+     * @param primaryKey
+     * @param tableOptions
+     */
     public prepareCreateTable (
         name: string,
         fields: Interfaces.ITableColumn[],
@@ -116,6 +156,12 @@ export class Postgres extends EventEmitter implements IDatabase {
         return prepareCreateTable(this.type, name, fields, primaryKey, tableOptions);
     }
 
+    /**
+     * Performs a query and returns the result
+     * @param query
+     * @param values
+     * @param openClient permit specifying the pool client to use
+     */
     public async query (
         query: string,
         values?: any[],
@@ -132,6 +178,10 @@ export class Postgres extends EventEmitter implements IDatabase {
         return [res.rowCount, res.rows];
     }
 
+    /**
+     * Constructs and executes the given queries in a transaction
+     * @param queries
+     */
     public async transaction (queries: Interfaces.IBulkQuery[]): Promise<void> {
         const client = await this.m_pool.connect();
 
@@ -151,12 +201,29 @@ export class Postgres extends EventEmitter implements IDatabase {
         }
     }
 
+    /**
+     * Prepares a query to perform a multi-insert statement which is
+     * far faster than a whole bunch of individual insert statements
+     * @param table the table to perform the insert on
+     * @param columns the columns to include in the insert
+     * @param values the value of the columns
+     */
     public prepareMultiInsert (table: string, columns: string[], values?: Interfaces.IValueArray): string {
         const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
 
         return pgformat(query, values);
     }
 
+    /**
+     * Prepares a query to perform a multi-update statement which is
+     * based upon a multi-insert statement that performs an UPSERT
+     * and this is a lot faster than a whole bunch of individual
+     * update statements
+     * @param table the table to perform the insert on
+     * @param primaryKey the primary key(s) of the column for update purposes
+     * @param columns the columns to update in the table
+     * @param values the value of the columns
+     */
     public prepareMultiUpdate (
         table: string, primaryKey: string[], columns: string[], values?: Interfaces.IValueArray): string {
         const query = this.prepareMultiInsert(table, primaryKey.concat(columns), values);
