@@ -1,6 +1,6 @@
 {
   "name": "db-abstraction",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "A simple database abstraction layer for multiple underlying database systems",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,7 @@
     "test": "npm run style",
     "prepare": "npm run build",
     "prepublishOnly": "npm test && npm run docs",
-    "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll",
+    "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll && git restore docs/CNAME",
     "style": "./node_modules/.bin/eslint -c .eslintrc.js src/*.ts",
     "fix-style": "./node_modules/.bin/eslint -c .eslintrc.js --fix src/*.ts"
   },
@@ -35,14 +35,14 @@
     "node-metronome": "0.0.12",
     "pg": "^8.3.3",
     "pg-format": "^1.0.4",
-    "sqlite3": "^4.2.0"
+    "sqlite3": "^5.0.0"
   },
   "devDependencies": {
-    "@types/node": "^14.11.1",
-    "@typescript-eslint/eslint-plugin": "^2.34.0",
-    "@typescript-eslint/parser": "^2.34.0",
-    "eslint": "^5.16.0",
-    "typedoc": "^0.17.8",
-    "typescript": "^3.9.7"
+    "@types/node": "^14.11.2",
+    "@typescript-eslint/eslint-plugin": "^4.2.0",
+    "@typescript-eslint/parser": "^4.2.0",
+    "eslint": "^7.9.0",
+    "typedoc": "^0.19.2",
+    "typescript": "^4.0.3"
   }
 }
