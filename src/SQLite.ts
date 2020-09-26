@@ -2,13 +2,13 @@
 //
 // Please see the included LICENSE file for more information.
 
-import {EventEmitter} from 'events';
-import {createTable, IDatabase, Interfaces, prepareCreateTable} from "./Types";
-import {resolve} from 'path';
-import {Database, OPEN_CREATE, OPEN_READWRITE} from 'sqlite3';
-import {escape} from 'mysql';
-import {Metronome} from "node-metronome";
-import {format} from "util";
+import { EventEmitter } from 'events';
+import { createTable, IDatabase, Interfaces, prepareCreateTable } from './Types';
+import { resolve } from 'path';
+import { Database, OPEN_CREATE, OPEN_READWRITE } from 'sqlite3';
+import { escape } from 'mysql';
+import { Metronome } from 'node-metronome';
+import { format } from 'util';
 
 /** @ignore */
 const pragmaFunctionCalls = [
@@ -23,7 +23,7 @@ const pragmaFunctionCalls = [
     'table_info',
     'table_xinfo',
     'optimize'
-]
+];
 
 /** @ignore */
 interface ICallback {
@@ -53,7 +53,7 @@ export class SQLite extends EventEmitter implements IDatabase {
      * @param filepath
      * @param mode
      */
-    constructor(
+    constructor (
         filepath: string,
         mode: number = OPEN_READWRITE | OPEN_CREATE
     ) {
@@ -65,7 +65,7 @@ export class SQLite extends EventEmitter implements IDatabase {
             if (error) return this.emit('error', error);
 
             this.emit('ready', filepath, mode);
-        })
+        });
 
         this.on('ready', async () => {
             try {
@@ -73,7 +73,7 @@ export class SQLite extends EventEmitter implements IDatabase {
             } catch (e) {
                 this.emit('error', e);
             }
-        })
+        });
 
         this.m_timer = new Metronome(250, true);
 
@@ -139,34 +139,34 @@ export class SQLite extends EventEmitter implements IDatabase {
             }
 
             this.m_timer.paused = false;
-        })
+        });
     }
 
-    public get hashType(): string {
+    public get hashType (): string {
         return 'varchar(64)';
     }
 
-    public get blobType(): string {
+    public get blobType (): string {
         return 'text';
     }
 
-    public get uint32Type(): string {
+    public get uint32Type (): string {
         return 'unsigned int';
     }
 
-    public get uint64Type(): string {
+    public get uint64Type (): string {
         return 'unsigned bigint';
     }
 
-    public get tableOptions(): string | undefined {
+    public get tableOptions (): string | undefined {
         return this.m_tableOptions;
     }
 
-    public set tableOptions(value: string | undefined) {
+    public set tableOptions (value: string | undefined) {
         this.m_tableOptions = value;
     }
 
-    public get type(): Interfaces.DBType {
+    public get type (): Interfaces.DBType {
         return Interfaces.DBType.SQLITE;
     }
 
@@ -174,11 +174,11 @@ export class SQLite extends EventEmitter implements IDatabase {
 
     public on(event: 'ready', listener: (filepath: string, mode: number) => void): this;
 
-    public on(event: any, listener: (...args: any[]) => void): this {
+    public on (event: any, listener: (...args: any[]) => void): this {
         return super.on(event, listener);
     }
 
-    public async createTable(
+    public async createTable (
         name: string,
         fields: Interfaces.ITableColumn[],
         primaryKey: string[],
@@ -191,7 +191,7 @@ export class SQLite extends EventEmitter implements IDatabase {
         }
     }
 
-    public prepareCreateTable(
+    public prepareCreateTable (
         name: string,
         fields: Interfaces.ITableColumn[],
         primaryKey: string[],
@@ -200,7 +200,7 @@ export class SQLite extends EventEmitter implements IDatabase {
         return prepareCreateTable(this.type, name, fields, primaryKey, tableOptions);
     }
 
-    public async getPragma(option: string): Promise<any> {
+    public async getPragma (option: string): Promise<any> {
         option = option.toLowerCase();
 
         const query = 'PRAGMA ' + option;
@@ -218,7 +218,7 @@ export class SQLite extends EventEmitter implements IDatabase {
         return rows;
     }
 
-    public async setPragma(
+    public async setPragma (
         option: string,
         value: boolean | number | string
     ): Promise<void> {
@@ -235,19 +235,19 @@ export class SQLite extends EventEmitter implements IDatabase {
         await this.query(query);
     }
 
-    public async close(): Promise<void> {
+    public async close (): Promise<void> {
         // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
-            const sleep = async (timeout: number = 100) =>
+            const sleep = async (timeout = 100) =>
                 new Promise(resolve => setTimeout(resolve, timeout));
 
             /**
              * Let's not close the database connection while we still have stuff
              * waiting to get done
              */
-            while (this.m_transactionQueue.length !== 0
-            || this.m_runQueue.length !== 0
-            || this.m_allQueue.length !== 0) {
+            while (this.m_transactionQueue.length !== 0 ||
+            this.m_runQueue.length !== 0 ||
+            this.m_allQueue.length !== 0) {
                 await sleep();
             }
 
@@ -255,18 +255,20 @@ export class SQLite extends EventEmitter implements IDatabase {
                 if (error) return reject(error);
 
                 return resolve();
-            })
-        })
+            });
+        });
     }
 
-    public async query(
+    public async query (
         query: string,
         values?: any[]
     ): Promise<Interfaces.IQueryResult> {
         return new Promise((resolve, reject) => {
             if (query.toLowerCase().startsWith('select')) {
                 this.m_allQueue.push({
-                    query, values, callback:
+                    query,
+                    values,
+                    callback:
                         (error, result) => {
                             if (error) {
                                 return reject(error);
@@ -274,10 +276,12 @@ export class SQLite extends EventEmitter implements IDatabase {
 
                             return resolve(result);
                         }
-                })
+                });
             } else {
                 this.m_runQueue.push({
-                    query, values, callback:
+                    query,
+                    values,
+                    callback:
                         (error, result) => {
                             if (error) {
                                 return reject(error);
@@ -285,16 +289,16 @@ export class SQLite extends EventEmitter implements IDatabase {
 
                             return resolve(result);
                         }
-                })
+                });
             }
-        })
+        });
     }
 
-    public async connection(): Promise<Database> {
+    public async connection (): Promise<Database> {
         return this.m_db;
     }
 
-    public async transaction(queries: Interfaces.IBulkQuery[]): Promise<void> {
+    public async transaction (queries: Interfaces.IBulkQuery[]): Promise<void> {
         return new Promise((resolve, reject) => {
             this.m_transactionQueue.push({
                 queries: queries,
@@ -305,11 +309,11 @@ export class SQLite extends EventEmitter implements IDatabase {
 
                     return resolve();
                 }
-            })
-        })
+            });
+        });
     }
 
-    public prepareMultiInsert(table: string, columns: string[], values?: Interfaces.IValueArray): string {
+    public prepareMultiInsert (table: string, columns: string[], values?: Interfaces.IValueArray): string {
         const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
 
         if (values) {
@@ -321,7 +325,7 @@ export class SQLite extends EventEmitter implements IDatabase {
         return query;
     }
 
-    private async all(query: string, values?: any[]): Promise<Interfaces.IQueryResult> {
+    private async all (query: string, values?: any[]): Promise<Interfaces.IQueryResult> {
         return new Promise((resolve, reject) => {
             this.m_db.all(query, values, (error, rows) => {
                 if (error) {
@@ -329,51 +333,51 @@ export class SQLite extends EventEmitter implements IDatabase {
                 }
 
                 return resolve([rows.length, rows]);
-            })
-        })
+            });
+        });
     }
 
-    private async run(query: string, values?: any[]): Promise<Interfaces.IQueryResult> {
+    private async run (query: string, values?: any[]): Promise<Interfaces.IQueryResult> {
         return new Promise((resolve, reject) => {
             this.m_db.run(query, values, function (error) {
                 if (error) {
                     return reject(error);
                 }
 
-                const count = (query.toLowerCase().startsWith('insert')) ? this.lastID :
-                    (query.toLowerCase().startsWith('update')
-                        || query.toLowerCase().startsWith('delete')) ? this.changes : 0;
+                const count = (query.toLowerCase().startsWith('insert')) ? this.lastID
+                    : (query.toLowerCase().startsWith('update') ||
+                        query.toLowerCase().startsWith('delete')) ? this.changes : 0;
 
                 return resolve([count, []]);
-            })
-        })
+            });
+        });
     }
 }
 
 /** @ignore */
-async function beginTransaction(connection: Database): Promise<void> {
+async function beginTransaction (connection: Database): Promise<void> {
     return new Promise((resolve, reject) => {
         connection.run('BEGIN TRANSACTION', err => {
             if (err) return reject(err);
 
             return resolve();
-        })
-    })
+        });
+    });
 }
 
 /** @ignore */
-async function commit(connection: Database): Promise<void> {
+async function commit (connection: Database): Promise<void> {
     return new Promise((resolve, reject) => {
         connection.run('COMMIT', err => {
             if (err) return reject(err);
 
             return resolve();
-        })
-    })
+        });
+    });
 }
 
 /** @ignore */
-async function query(
+async function query (
     connection: Database,
     query: string,
     values: any[] = []
@@ -383,17 +387,17 @@ async function query(
             if (err) return reject(err);
 
             return resolve();
-        })
-    })
+        });
+    });
 }
 
 /** @ignore */
-async function rollback(connection: Database): Promise<void> {
+async function rollback (connection: Database): Promise<void> {
     return new Promise((resolve, reject) => {
         connection.run('ROLLBACK', err => {
             if (err) return reject(err);
 
             return resolve();
-        })
-    })
+        });
+    });
 }

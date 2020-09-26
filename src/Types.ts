@@ -2,7 +2,7 @@
 //
 // Please see the included LICENSE file for more information.
 
-import {format} from "util";
+import { format } from 'util';
 
 export namespace Interfaces {
     /**
@@ -24,6 +24,17 @@ export namespace Interfaces {
     }
 
     /**
+     * Foreign Key interface that represents a foreign key relationship
+     * with a defined constraint
+     */
+    export interface IForeignKey {
+        table: string;
+        column: string;
+        update?: string;
+        delete?: string;
+    }
+
+    /**
      * Column interface that represents an individual table column
      */
     export interface ITableColumn {
@@ -33,17 +44,6 @@ export namespace Interfaces {
         foreign?: IForeignKey;
         unique?: boolean;
         default?: string | number
-    }
-
-    /**
-     * Foreign Key interface that represents a foreign key relationship
-     * with a defined constraint
-     */
-    export interface IForeignKey {
-        table: string;
-        column: string;
-        update?: string;
-        delete?: string;
     }
 
     /**
@@ -181,7 +181,7 @@ export abstract class IDatabase {
  * @param primaryKey
  * @param tableOptions
  */
-export function prepareCreateTable(
+export function prepareCreateTable (
     dbType: Interfaces.DBType,
     name: string,
     fields: Interfaces.ITableColumn[],
@@ -199,12 +199,12 @@ export function prepareCreateTable(
 
     const l_unique = fields.filter(elem => elem.unique === true)
         .map(col => format(
-                'CREATE UNIQUE INDEX IF NOT EXISTS %s_unique_%s ON %s (%s);',
-                name,
-                col.name,
-                name,
-                col.name
-            ));
+            'CREATE UNIQUE INDEX IF NOT EXISTS %s_unique_%s ON %s (%s);',
+            name,
+            col.name,
+            name,
+            col.name
+        ));
 
     const constraint_fmt =
         ', CONSTRAINT %s_%s_fkey FOREIGN KEY (%s) REFERENCES %s (%s)';
@@ -230,7 +230,7 @@ export function prepareCreateTable(
                 constraint += format(' ON UPDATE %s', field.foreign.update.toUpperCase());
             }
 
-            l_constraints.push(constraint)
+            l_constraints.push(constraint);
         }
     }
 
@@ -246,7 +246,7 @@ export function prepareCreateTable(
     return {
         table: sql,
         indexes: l_unique
-    }
+    };
 }
 
 /**
@@ -258,7 +258,7 @@ export function prepareCreateTable(
  * @param primaryKey
  * @param tableOptions
  */
-export async function createTable(
+export async function createTable (
     db: IDatabase,
     dbType: Interfaces.DBType,
     name: string,
@@ -268,7 +268,7 @@ export async function createTable(
 ): Promise<void> {
     const preparedTable = prepareCreateTable(dbType, name, fields, primaryKey, tableOptions);
 
-    await db.transaction([{query: preparedTable.table}]);
+    await db.transaction([{ query: preparedTable.table }]);
 
     if (preparedTable.indexes.length !== 0) {
         const stmts: Interfaces.IBulkQuery[] = preparedTable.indexes.map(query => {

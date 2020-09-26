@@ -2,7 +2,7 @@
 //
 // Please see the included LICENSE file for more information.
 
-export {MySQL} from './MySQL';
-export {Postgres} from './Postgres';
-export {SQLite} from './SQLite';
-export {Interfaces, IDatabase, prepareCreateTable} from './Types';
+export { MySQL } from './MySQL';
+export { Postgres } from './Postgres';
+export { SQLite } from './SQLite';
+export { Interfaces, IDatabase, prepareCreateTable } from './Types';

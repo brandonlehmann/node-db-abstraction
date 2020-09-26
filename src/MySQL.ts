@@ -2,10 +2,10 @@
 //
 // Please see the included LICENSE file for more information.
 
-import {EventEmitter} from 'events';
-import {createTable, IDatabase, Interfaces, prepareCreateTable} from "./Types";
-import {createPool, escape, Pool, PoolConnection} from 'mysql';
-import {format} from "util";
+import { EventEmitter } from 'events';
+import { createTable, IDatabase, Interfaces, prepareCreateTable } from './Types';
+import { createPool, escape, Pool, PoolConnection } from 'mysql';
+import { format } from 'util';
 
 /**
  * MYSQL interface that implements IDatabase
@@ -23,17 +23,17 @@ export class MySQL extends EventEmitter implements IDatabase {
      * @param database
      * @param connectionLimit
      */
-    constructor(
+    constructor (
         host: string,
         port: number,
         user: string,
         password: string,
         database: string,
-        connectionLimit: number = 10
+        connectionLimit = 10
     ) {
         super();
 
-        this.m_db = createPool({host, port, user, password, database, connectionLimit})
+        this.m_db = createPool({ host, port, user, password, database, connectionLimit });
         this.m_db.on('error', error => this.emit('error', error));
         this.m_db.on('acquire', connection => this.emit('acquire', connection));
         this.m_db.on('connection', connection => this.emit('connection', connection));
@@ -42,31 +42,31 @@ export class MySQL extends EventEmitter implements IDatabase {
         this.emit('ready');
     }
 
-    public get hashType(): string {
+    public get hashType (): string {
         return 'char(64)';
     }
 
-    public get blobType(): string {
+    public get blobType (): string {
         return 'longtext';
     }
 
-    public get uint32Type(): string {
+    public get uint32Type (): string {
         return 'int(10) unsigned';
     }
 
-    public get uint64Type(): string {
+    public get uint64Type (): string {
         return 'bigint(20) unsigned';
     }
 
-    public get tableOptions(): string | undefined {
+    public get tableOptions (): string | undefined {
         return this.m_tableOptions;
     }
 
-    public set tableOptions(value: string | undefined) {
+    public set tableOptions (value: string | undefined) {
         this.m_tableOptions = value;
     }
 
-    public get type(): Interfaces.DBType {
+    public get type (): Interfaces.DBType {
         return Interfaces.DBType.MYSQL;
     }
 
@@ -82,11 +82,11 @@ export class MySQL extends EventEmitter implements IDatabase {
 
     public on(event: 'ready', listener: () => void): this;
 
-    public on(event: any, listener: (...args: any[]) => void): this {
+    public on (event: any, listener: (...args: any[]) => void): this {
         return super.on(event, listener);
     }
 
-    public async createTable(
+    public async createTable (
         name: string,
         fields: Interfaces.ITableColumn[],
         primaryKey: string[],
@@ -99,7 +99,7 @@ export class MySQL extends EventEmitter implements IDatabase {
         }
     }
 
-    public prepareCreateTable(
+    public prepareCreateTable (
         name: string,
         fields: Interfaces.ITableColumn[],
         primaryKey: string[],
@@ -108,17 +108,17 @@ export class MySQL extends EventEmitter implements IDatabase {
         return prepareCreateTable(this.type, name, fields, primaryKey, tableOptions);
     }
 
-    public async close(): Promise<void> {
+    public async close (): Promise<void> {
         return new Promise((resolve, reject) => {
             this.m_db.end(err => {
                 if (err) return reject(err);
 
                 return resolve();
-            })
-        })
+            });
+        });
     }
 
-    public async query(
+    public async query (
         query: string,
         values?: any[]
     ): Promise<Interfaces.IQueryResult> {
@@ -131,12 +131,12 @@ export class MySQL extends EventEmitter implements IDatabase {
                     results.insertId ||
                     results.length;
 
-                return resolve([count, results])
-            })
-        })
+                return resolve([count, results]);
+            });
+        });
     }
 
-    public async transaction(queries: Interfaces.IBulkQuery[]): Promise<void> {
+    public async transaction (queries: Interfaces.IBulkQuery[]): Promise<void> {
         const connection = await this.connection();
 
         try {
@@ -155,7 +155,7 @@ export class MySQL extends EventEmitter implements IDatabase {
         }
     }
 
-    public prepareMultiInsert(table: string, columns: string[], values?: Interfaces.IValueArray): string {
+    public prepareMultiInsert (table: string, columns: string[], values?: Interfaces.IValueArray): string {
         const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
 
         if (values) {
@@ -167,41 +167,41 @@ export class MySQL extends EventEmitter implements IDatabase {
         return query;
     }
 
-    private async connection(): Promise<PoolConnection> {
+    private async connection (): Promise<PoolConnection> {
         return new Promise((resolve, reject) => {
             this.m_db.getConnection((error, connection) => {
                 if (error) return reject(error);
 
                 return resolve(connection);
-            })
-        })
+            });
+        });
     }
 }
 
 /** @ignore */
-async function beginTransaction(connection: PoolConnection): Promise<void> {
+async function beginTransaction (connection: PoolConnection): Promise<void> {
     return new Promise((resolve, reject) => {
         connection.beginTransaction(error => {
             if (error) return reject(error);
 
             return resolve();
-        })
-    })
+        });
+    });
 }
 
 /** @ignore */
-async function commit(connection: PoolConnection): Promise<void> {
+async function commit (connection: PoolConnection): Promise<void> {
     return new Promise((resolve, reject) => {
         connection.commit(error => {
             if (error) return reject(error);
 
             return resolve();
-        })
-    })
+        });
+    });
 }
 
 /** @ignore */
-async function query(
+async function query (
     connection: PoolConnection,
     query: string,
     values: any[] = []
@@ -211,17 +211,17 @@ async function query(
             if (error) return reject(error);
 
             return resolve();
-        })
-    })
+        });
+    });
 }
 
 /** @ignore */
-async function rollback(connection: PoolConnection): Promise<void> {
+async function rollback (connection: PoolConnection): Promise<void> {
     return new Promise((resolve, reject) => {
         connection.rollback(error => {
             if (error) return reject(error);
 
             return resolve();
-        })
-    })
+        });
+    });
 }
