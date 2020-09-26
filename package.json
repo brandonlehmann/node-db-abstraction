@@ -7,10 +7,10 @@
   "scripts": {
     "build": "./node_modules/.bin/tsc",
     "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll && git restore docs/CNAME",
-    "test": "npm run style",
+    "test": "yarn style",
     "style": "./node_modules/.bin/eslint src/**/*.ts",
     "fix-style": "./node_modules/.bin/eslint --fix src/**/*.ts",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "yarn build"
   },
   "files": [
     "dist/*"
