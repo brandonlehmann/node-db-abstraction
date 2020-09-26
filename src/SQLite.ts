@@ -383,7 +383,7 @@ export class SQLite extends EventEmitter implements IDatabase {
      * @param values the value of the columns
      */
     public prepareMultiInsert (table: string, columns: string[], values?: Interfaces.IValueArray): string {
-        const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
+        const query = format('INSERT INTO %s (%s) VALUES %L', table, columns.join(','));
 
         if (values) {
             const escaped = escape(values);
