@@ -155,10 +155,11 @@ export abstract class IDatabase {
     /**
      * Prepares a query to perform a multi-insert statement which is
      * far faster than a whole bunch of individual insert statements
-     * @param query
+     * @param table
+     * @param columns
      * @param values
      */
-    public abstract prepareMultiInsert(query: string, values?: Interfaces.IValueArray): string;
+    public abstract prepareMultiInsert(table: string, columns: string[], values?: Interfaces.IValueArray): string;
 
     /**
      * Prepares a query to perform a multi-update statement via UPSERT

@@ -5,6 +5,7 @@
 import {EventEmitter} from 'events';
 import {createTable, IDatabase, Interfaces, prepareCreateTable} from "./Types";
 import {createPool, escape, Pool, PoolConnection} from 'mysql';
+import {format} from "util";
 
 /**
  * MYSQL interface that implements IDatabase
@@ -154,7 +155,9 @@ export class MySQL extends EventEmitter implements IDatabase {
         }
     }
 
-    public prepareMultiInsert(query: string, values?: Interfaces.IValueArray): string {
+    public prepareMultiInsert(table: string, columns: string[], values?: Interfaces.IValueArray): string {
+        const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
+
         if (values) {
             const escaped = escape(values);
 

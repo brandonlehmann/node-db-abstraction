@@ -5,6 +5,7 @@
 import {EventEmitter} from 'events';
 import {Pool, PoolClient} from 'pg';
 import * as pgformat from 'pg-format';
+import {format} from 'util';
 import {createTable, IDatabase, Interfaces, prepareCreateTable} from "./Types";
 
 export class Postgres extends EventEmitter implements IDatabase {
@@ -151,7 +152,9 @@ export class Postgres extends EventEmitter implements IDatabase {
         }
     }
 
-    public prepareMultiInsert(query: string, values?: Interfaces.IValueArray): string {
+    public prepareMultiInsert(table: string, columns: string[], values?: Interfaces.IValueArray): string {
+        const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
+
         return pgformat(query, values);
     }
 }

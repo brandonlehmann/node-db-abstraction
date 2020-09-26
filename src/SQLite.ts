@@ -8,6 +8,7 @@ import {resolve} from 'path';
 import {Database, OPEN_CREATE, OPEN_READWRITE} from 'sqlite3';
 import {escape} from 'mysql';
 import {Metronome} from "node-metronome";
+import {format} from "util";
 
 /** @ignore */
 const pragmaFunctionCalls = [
@@ -308,7 +309,9 @@ export class SQLite extends EventEmitter implements IDatabase {
         })
     }
 
-    public prepareMultiInsert(query: string, values?: Interfaces.IValueArray): string {
+    public prepareMultiInsert(table: string, columns: string[], values?: Interfaces.IValueArray): string {
+        const query = format('INSERT INTO %s (%s) %L', table, columns.join(','));
+
         if (values) {
             const escaped = escape(values);
 
