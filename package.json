@@ -6,12 +6,11 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "./node_modules/.bin/tsc",
-    "test": "npm run style",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test && npm run docs",
     "docs": "./node_modules/.bin/typedoc && touch docs/.nojekyll && git restore docs/CNAME",
+    "test": "npm run style",
     "style": "./node_modules/.bin/eslint src/**/*.ts",
-    "fix-style": "./node_modules/.bin/eslint --fix src/**/*.ts"
+    "fix-style": "./node_modules/.bin/eslint --fix src/**/*.ts",
+    "prepublishOnly": "npm run build"
   },
   "files": [
     "dist/*"
